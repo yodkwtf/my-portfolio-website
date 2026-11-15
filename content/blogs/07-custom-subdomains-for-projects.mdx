@@ -1,0 +1,181 @@
+---
+title: 'How to Publish Your Projects on Custom Subdomains'
+description: 'A reusable guide to publishing each of your projects at project.yourdomain.com, with Netlify examples and DNS instructions that work with Hostinger, Cloudflare, or Netlify DNS.'
+publishedAt: '2026-11-15'
+category: 'DevOps'
+tags: ['Branding', 'DNS']
+featured: true
+coverImage: 'https://images.unsplash.com/photo-1586281380426-f644f2dc6ada?auto=format&fit=crop&w=1600&q=80'
+youtubeId: ''
+draft: false
+---
+
+Once you have a few side projects, giving each one its own address like `cinematica.yourdomain.com` looks far more polished than a random `*.netlify.app` URL. It's also easy: one DNS record per project. This guide covers the full setup using Netlify as the host, and the steps carry over to any other provider.
+
+## The three pieces involved
+
+A **domain** is the address you own (`yourdomain.com`). A **subdomain** is an address underneath it (`cinematica.yourdomain.com`), and each one can point to a different app, even if those apps live on different hosts.
+
+| Purpose | Example address | Hosted on |
+| --- | --- | --- |
+| Main portfolio | `yourdomain.com` | Netlify |
+| A project | `cinematica.yourdomain.com` | Netlify |
+| Another project | `paywise.yourdomain.com` | Vercel |
+| API | `api.yourdomain.com` | Render, Railway, a VPS, etc. |
+
+Three separate services are at work, and it helps to keep them apart in your head:
+
+- **Domain registrar** — where you bought and renew the domain (Hostinger, Namecheap, GoDaddy).
+- **DNS provider** — where DNS records live and nameservers are managed. This can be your registrar, Cloudflare, or Netlify DNS.
+- **Hosting provider** — where the app actually runs (Netlify, Vercel, Render, etc.).
+
+You don't need to move your domain registration to use a different DNS or hosting provider.
+
+<Callout type="info" title="The one rule that prevents most problems">
+  Always create DNS records at the provider whose nameservers are currently
+  active for your domain. Adding a domain inside Netlify does not mean Netlify
+  controls your DNS — records added in the wrong place simply do nothing.
+</Callout>
+
+## Before you start
+
+For every project, have these ready:
+
+- A deployed project with a working provider URL, such as `my-project.netlify.app`
+- Access to your hosting dashboard and your DNS provider
+- The exact hostname you want, such as `cinematica.yourdomain.com`
+
+Deploy first and confirm the provider URL works. Then attach the custom domain.
+
+## Step 1 — Add the domain in Netlify
+
+Open the specific Netlify site that should receive the traffic (not your main portfolio site), then:
+
+1. Go to **Domain management** in the sidebar
+2. Click **Add a domain** → **Add a domain you already own**
+3. Enter the full subdomain, e.g. `cinematica.yourdomain.com`
+4. Follow the verification prompts
+
+Dashboard labels change over time, so if your menu looks different, look for the Domain management area and the option to add an existing domain.
+
+## Step 2 — Find the DNS record Netlify expects
+
+If your DNS is hosted outside Netlify, the new domain will show as **Pending DNS verification**. Open it and Netlify will display the record it needs. For a subdomain, this is typically a CNAME pointing at that site's own `*.netlify.app` hostname:
+
+| Type | Name / Host | Target / Value |
+| --- | --- | --- |
+| CNAME | `cinematica` | `cinematica-project.netlify.app` |
+
+The target above is only an example. Use the exact value Netlify shows you.
+
+## Step 3 — Create the record at your DNS provider
+
+Which dashboard you use depends on who your domain's nameservers point to. Not sure? Check the nameservers in your registrar dashboard or run a public NS lookup. Hostinger nameservers mean you manage records at Hostinger, Cloudflare nameservers mean Cloudflare, and Netlify nameservers mean Netlify DNS. The place you bought the domain isn't necessarily the place DNS is managed.
+
+### Registrar-managed DNS (Hostinger example)
+
+1. Open **Domains** → your domain → **DNS / Nameservers** (or DNS Zone Editor)
+2. Add a record with type `CNAME`, name `cinematica`, target `cinematica-project.netlify.app`, and default TTL
+3. Save, then check verification in Netlify
+
+You don't need to touch nameservers to add a subdomain. A CNAME record is enough.
+
+### Cloudflare DNS
+
+1. Select your domain, then go to **DNS → Records → Add record**
+2. Choose `CNAME`, enter name `cinematica` and the Netlify target, with TTL on `Auto`
+3. Set **Proxy status** to **DNS only** (grey cloud)
+4. Save and check verification in Netlify
+
+Cloudflare's orange-cloud proxy changes how traffic and TLS are handled. Start with DNS only, and turn the proxy on later only if you have a reason to and have tested it.
+
+### Netlify DNS
+
+If you delegated your nameservers to Netlify, open **DNS** in the team-level sidebar and select your domain's zone. Netlify can create the records automatically when you assign the domain to a site. To add one manually, choose **Add new record**, pick the type, and fill in the name and value.
+
+For a subdomain, the Name field is usually just the label (`cinematica`), not the full hostname. Some dashboards accept either, so follow the field hint.
+
+## Step 4 — Verify and enable HTTPS
+
+Back in the project's Domain management page, wait for DNS verification to complete. Once the domain is correctly configured, Netlify provisions the HTTPS certificate automatically. Then open `https://cinematica.yourdomain.com` in a private window to test it.
+
+DNS changes usually show up within minutes but can take up to 24 hours. Avoid repeatedly editing records while you wait, since that just makes problems harder to diagnose.
+
+## Step 5 — Repeat for every project
+
+Each project gets its own Netlify site, its own hostname, and its own record, always pointing at that site's own Netlify hostname:
+
+| Netlify site | Custom domain | DNS record |
+| --- | --- | --- |
+| Cinematica | `cinematica.yourdomain.com` | CNAME `cinematica` → that site's `*.netlify.app` |
+| Paywise | `paywise.yourdomain.com` | CNAME `paywise` → that site's `*.netlify.app` |
+| Nexus | `nexus.yourdomain.com` | CNAME `nexus` → that site's `*.netlify.app` |
+
+## Using other hosting providers
+
+The workflow is the same for Vercel, Render, Railway, Fly.io, GitHub Pages, Cloudflare Pages, or a VPS:
+
+1. Deploy the app and confirm its provider URL works
+2. Find **Domains** or **Custom domains** in that project's dashboard and add `project.yourdomain.com`
+3. Copy the exact DNS record(s) the provider displays
+4. Add them at your authoritative DNS provider
+5. Wait for verification and HTTPS
+
+The record types you'll run into:
+
+| Record | Typical use | Example |
+| --- | --- | --- |
+| CNAME | Point a subdomain at a provider hostname | `app` → `project.host.example` |
+| A | Point a hostname at an IPv4 address | `app` → `203.0.113.10` |
+| AAAA | Point a hostname at an IPv6 address | `app` → an IPv6 address |
+| TXT | Ownership verification or service config | A provider-supplied token |
+
+Always use the values your provider gives you, since targets and IPs differ between providers and can change. Because all records live in one DNS zone, mixing providers is fine:
+
+```txt
+yourdomain.com               → Netlify
+cinematica.yourdomain.com    → Netlify
+paywise.yourdomain.com       → Vercel
+api.yourdomain.com           → Render
+docs.yourdomain.com          → Cloudflare Pages
+```
+
+## Do you need a wildcard subdomain?
+
+A wildcard record (`*.yourdomain.com`) matches any subdomain you haven't listed explicitly. That's useful for multi-tenant apps that route by hostname, but it's usually unnecessary when each project is its own deployment. A wildcard DNS record doesn't create deployments, and your host must also support the wildcard hostname and cover it with a TLS certificate. For a normal project portfolio, explicit subdomains are simpler and easier to debug.
+
+## Changing nameservers: be careful
+
+Some setups, like Cloudflare Email Routing, require your domain to use Cloudflare DNS. Switching nameservers doesn't transfer your registration, but it changes which provider controls your live DNS zone, so a missing record can take down your site, email, or verification.
+
+If you do move DNS, add the domain to the new provider first and compare its imported records against the old zone. Make sure your root, `www`, project subdomains, verification TXT, and MX records are all present before you switch. Keep the old zone around until you've confirmed everything still resolves. For the full email walkthrough, see the guide on setting up free custom domain email with Cloudflare.
+
+## Troubleshooting
+
+**Netlify says the domain isn't verified** — Check that the CNAME name is exactly right, the target is this project's Netlify hostname, and you edited the authoritative DNS provider. Also look for conflicting A, AAAA, or CNAME records on the same hostname, then wait for propagation and retry.
+
+**The domain opens the wrong project** — Check which Netlify site has the domain assigned, and that the DNS target is that project's hostname rather than your portfolio's.
+
+**HTTPS certificate is pending** — Make sure DNS resolves to the right provider and remove conflicting records. If you're using Cloudflare's proxy, test with DNS only. Then give provisioning some time.
+
+**The site broke after changing nameservers** — Compare the new DNS zone with the old provider's records and restore anything missing: root, `www`, subdomains, verification TXT, and MX records. Copy target values from each service's official setup instructions rather than guessing.
+
+## Checklist for every new project
+
+- [ ] Deploy the project and confirm its provider URL works
+- [ ] Choose a subdomain, e.g. `newproject.yourdomain.com`
+- [ ] Add that hostname in the project's hosting dashboard
+- [ ] Copy the exact DNS record the host asks for
+- [ ] Add it at your authoritative DNS provider
+- [ ] Wait for verification and confirm HTTPS is active
+- [ ] Test in a private browser window
+- [ ] Update the links on your portfolio
+
+## Official documentation
+
+Dashboard labels and requirements change, so when in doubt follow the instructions shown in your project dashboard and these docs:
+
+- [Netlify: assign a domain to your site](https://docs.netlify.com/manage/domains/manage-domains/assign-a-domain-to-your-site-app/)
+- [Netlify: configure external DNS](https://docs.netlify.com/manage/domains/configure-domains/configure-external-dns/)
+- [Netlify: set up Netlify DNS](https://docs.netlify.com/manage/domains/set-up-netlify-dns/)
+- [Cloudflare: Email Routing](https://developers.cloudflare.com/email-routing/)
