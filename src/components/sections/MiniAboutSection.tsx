@@ -50,7 +50,7 @@ export async function MiniAboutSection() {
                 </span>
                 <span className='flex items-center gap-1.5'>
                   <Coffee size={14} className='text-accent-fg' />
-                  Fueled by Chai
+                  Fueled by Coffee
                 </span>
                 <span className='flex items-center gap-1.5'>
                   <Code2 size={14} className='text-accent-fg' />
