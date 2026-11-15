@@ -50,11 +50,12 @@ function resolveSrcSet(props: Properties, base: string) {
     .join(', ');
 }
 
-export function rehypeGithubUrls({ owner, repo }: GitHubRepo) {
+export function rehypeGithubUrls({ owner, repo, subpath }: GitHubRepo) {
   // raw.githubusercontent.com serves file contents (for images/media);
-  // github.com/…/blob renders files (for links). HEAD = default branch.
-  const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/`;
-  const blobBase = `https://github.com/${owner}/${repo}/blob/HEAD/`;
+  // github.com/.../blob renders files (for links). HEAD = default branch.
+  const suffix = subpath ? `${subpath}/` : '';
+  const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${suffix}`;
+  const blobBase = `https://github.com/${owner}/${repo}/blob/HEAD/${suffix}`;
 
   return (tree: Nodes) => {
     walk(tree, rawBase, blobBase);

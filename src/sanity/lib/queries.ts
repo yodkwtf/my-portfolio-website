@@ -3,26 +3,27 @@ import type { Project, Skill, Experience, AboutPage } from '@/types';
 
 // Projects
 const projectFields = `
-  _id, title, slug, summary, techStack,
+  _id, title, slug, summary,
+  "techStack": techStack[]->name,
   featured, clientWork, githubUrl, liveUrl,
   thumbnail { asset, alt, caption }
 `;
 
 export async function getAllProjects(): Promise<Project[]> {
   return sanityFetch(
-    `*[_type == "project"] | order(title asc) { ${projectFields} }`,
+    `*[_type == "project" && visible != false] | order(title asc) { ${projectFields} }`,
   );
 }
 
 export async function getFeaturedProjects(): Promise<Project[]> {
   return sanityFetch(
-    `*[_type == "project" && featured == true] | order(title asc)[0...3] { ${projectFields} }`,
+    `*[_type == "project" && featured == true && visible != false] | order(title asc)[0...3] { ${projectFields} }`,
   );
 }
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   return sanityFetch(
-    `*[_type == "project" && slug.current == $slug][0] { ${projectFields} }`,
+    `*[_type == "project" && slug.current == $slug && visible != false][0] { ${projectFields} }`,
     { slug },
   );
 }

@@ -58,10 +58,12 @@ function Readme({
   source,
   owner,
   repo,
+  subpath,
 }: {
   source: string;
   owner: string;
   repo: string;
+  subpath?: string;
 }) {
   return (
     <div className="prose prose-lg dark:prose-invert max-w-none">
@@ -73,7 +75,7 @@ function Readme({
             remarkPlugins: [remarkGfm],
             rehypePlugins: [
               [rehypeRaw, { passThrough: MDX_NODE_TYPES }],
-              [rehypeGithubUrls, { owner, repo }],
+              [rehypeGithubUrls, { owner, repo, subpath }],
               rehypeSlug,
               [
                 rehypePrettyCode,
@@ -205,7 +207,7 @@ export default async function ProjectDetailPage({ params }: Params) {
         {/* README (carries its own title); title/summary only as fallback */}
         {readme && repo ? (
           <AnimateIn className="mb-16">
-            <Readme source={readme} owner={repo.owner} repo={repo.repo} />
+            <Readme source={readme} owner={repo.owner} repo={repo.repo} subpath={repo.subpath} />
           </AnimateIn>
         ) : (
           <>
