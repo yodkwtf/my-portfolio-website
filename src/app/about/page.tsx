@@ -184,7 +184,7 @@ export default async function AboutPage() {
                         </div>
 
                         <div className='glass flex-1 rounded-xl border border-border p-4 transition-colors hover:border-accent-500/30 sm:p-5'>
-                          <div className='mb-3 flex flex-wrap items-start justify-between gap-3'>
+                          <div className='mb-4 flex flex-wrap items-start justify-between gap-3'>
                             <div className='min-w-0'>
                               <div className='flex flex-wrap items-center gap-2'>
                                 <h3 className='font-semibold text-ink'>
