@@ -16,7 +16,7 @@ If you use the same machine for work and personal development, you've probably r
 - `git push` authenticates using the wrong GitHub account.
 - You keep logging in and out of VS Code.
 
-This guide walks through a one-time setup that lets both accounts coexist peacefully — the right commit author, the right SSH key, the right remote — all based on where the repository lives on your machine.
+This guide walks through a one-time setup that lets both accounts coexist peacefully - the right commit author, the right SSH key, the right remote - all based on where the repository lives on your machine.
 
 ## Folder structure
 
@@ -63,13 +63,13 @@ Paste the copied key into the corresponding GitHub account under **Settings → 
 
 <Callout type="info" title="Why ed25519?">
   You might notice the generated key starts with `ssh-ed25519` rather than the
-  older `ssh-rsa`. That's expected — `ed25519` is the recommended modern
+  older `ssh-rsa`. That's expected - `ed25519` is the recommended modern
   algorithm, and GitHub supports it fully.
 </Callout>
 
 ## Step 2: Configure SSH
 
-Create (or append to) `~/.ssh/config` with two host entries — one per account:
+Create (or append to) `~/.ssh/config` with two host entries - one per account:
 
 ```ssh
 # filename: ~/.ssh/config
@@ -86,7 +86,7 @@ Host github-personal
     IdentitiesOnly yes
 ```
 
-Each `Host` entry defines a custom alias (`github-work`, `github-personal`) that maps to `github.com` but uses a different SSH key. The `IdentitiesOnly yes` line is important — it tells SSH to only try the specified key and not fall back to any other identity in your agent.
+Each `Host` entry defines a custom alias (`github-work`, `github-personal`) that maps to `github.com` but uses a different SSH key. The `IdentitiesOnly yes` line is important - it tells SSH to only try the specified key and not fall back to any other identity in your agent.
 
 Verify both connections work:
 
@@ -99,7 +99,7 @@ Each should print a success message with the corresponding GitHub username.
 
 ## Step 3: Configure Git identities
 
-Create two separate Git config files — one per identity:
+Create two separate Git config files - one per identity:
 
 ```ini
 # filename: ~/.gitconfig-work
@@ -146,7 +146,7 @@ For new repositories, clone them using SSH from the start. The SSH URL format is
 git@<ssh-host-alias>:<github-username-or-org>/<repository>.git
 ```
 
-Note the colon after the host alias and the slash between the owner and repository name — those aren't interchangeable.
+Note the colon after the host alias and the slash between the owner and repository name - those aren't interchangeable.
 
 ## Step 5: Make cloning effortless with shell functions
 
@@ -190,7 +190,7 @@ clone-personal my-blog
 
 ### The upgraded version
 
-The basic version works, but it will error out if you run it on a repository you've already cloned. The upgraded version handles that gracefully — and also opens VS Code automatically once you're in the folder.
+The basic version works, but it will error out if you run it on a repository you've already cloned. The upgraded version handles that gracefully - and also opens VS Code automatically once you're in the folder.
 
 ```bash
 # filename: ~/.zshrc
@@ -240,7 +240,7 @@ clone-personal() {
 
 ### Shortening to two-letter aliases (optional)
 
-Once you're comfortable with the functions, you can rename them to shorter aliases. There's nothing special about the names — just pick whatever feels natural:
+Once you're comfortable with the functions, you can rename them to shorter aliases. There's nothing special about the names - just pick whatever feels natural:
 
 ```bash
 # filename: ~/.zshrc
@@ -257,63 +257,13 @@ gw api-service    # clone (or open) a work repository
 gp portfolio      # clone (or open) a personal repository
 ```
 
-Both commands work from anywhere in your terminal — they always navigate to the correct root folder before doing anything.
+Both commands work from anywhere in your terminal - they always navigate to the correct root folder before doing anything.
 
 After editing your `~/.zshrc` or `~/.bashrc`, reload it to apply the changes:
 
 ```bash
 source ~/.zshrc   # or source ~/.bashrc
 ```
-
-### Handling organization repos (not just your own account)
-
-There's one gotcha the functions above don't account for: a single hardcoded namespace only works for _one_ place your repos can live. If your work GitHub account is also a member of an organization, org-owned repos live under a completely different path than your own account's repos:
-
-```text
-git@github-work:your-username/repo.git    # repo under your own account
-git@github-work:your-org-name/repo.git    # repo owned by the organization
-```
-
-If `gw` has your username hardcoded and you try to clone a repo that actually belongs to the org, you'll hit a confusing dead end: `ssh -T git@github-work` still authenticates correctly, the org already shows as SSO-authorized under your SSH key in GitHub's settings, and cloning the exact same repo over HTTPS works fine — yet `gw` still fails. It's not a permissions problem at all; the function is just pointed at the wrong namespace.
-
-The fix is to accept the namespace as an optional second argument, defaulting to whichever one you use most often:
-
-```bash
-# filename: ~/.zshrc
-
-gw() {
-    local ROOT="$HOME/Documents/Code/GitHub/Work"
-    local NAMESPACE="${2:-your-username}"   # defaults to your own account, override for orgs
-
-    if [ -z "$1" ]; then
-        echo "Usage: gw <repo-name> [namespace]"
-        return 1
-    fi
-
-    mkdir -p "$ROOT"
-    cd "$ROOT" || return
-
-    if [ -d "$1" ]; then
-        echo "📂 Opening existing repository..."
-        cd "$1"
-    else
-        echo "⬇️  Cloning repository..."
-        git clone git@github-work:"$NAMESPACE"/"$1".git || return
-        cd "$1"
-    fi
-
-    code .
-}
-```
-
-Now both cases work with the same function:
-
-```bash
-gw my-own-repo                  # clones your-username/my-own-repo
-gw internal-tool your-org-name  # clones your-org-name/internal-tool
-```
-
-If you clone org repos more often than your own, just flip the default in `NAMESPACE` — whichever namespace you'll type less often should be the fallback.
 
 ## Step 6: Add a global pre-push hook
 
@@ -368,9 +318,41 @@ fi
 exit 0
 ```
 
-This hook runs before every `git push`. It checks whether the remote URL of the repository matches the folder it lives in — if a repository inside `Work` is trying to push to a `github-personal` remote (or vice versa), the push is aborted with a clear error message telling you exactly how to fix it.
+This hook runs before every `git push`. It checks whether the remote URL of the repository matches the folder it lives in - if a repository inside `Work` is trying to push to a `github-personal` remote (or vice versa), the push is aborted with a clear error message telling you exactly how to fix it.
 
 This catches the one scenario the folder-based setup can't prevent on its own: a remote URL that was manually set to the wrong account.
+
+## Troubleshooting a failed clone
+
+If a clone fails, work through these in order. Each one rules out a different layer.
+
+**1. Check which account SSH is using.** The output should greet the GitHub username you expect:
+
+```bash
+ssh -T git@github-work
+```
+
+**2. Bypass your shell function.** Run the clone by hand with the owner and repository name copied from the **Code → SSH** option on GitHub. If this works but the alias doesn't, the problem is the namespace or the function, not GitHub:
+
+```bash
+git clone git@github-work:<owner>/<repo>.git
+```
+
+**3. Read the verbose output.** This shows which key SSH actually offers, and the last lines contain the real error:
+
+```bash
+GIT_SSH_COMMAND='ssh -v' git clone git@github-work:<owner>/<repo>.git
+```
+
+Look for a line like `Offering public key: ~/.ssh/github_work` to confirm the right key is being used.
+
+**4. Match the error to the cause:**
+
+| Error                                    | What it usually means                                                                                                                                                                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Could not resolve hostname github-work` | The `Host` entry in `~/.ssh/config` is missing or misspelled.                                                                                                                                                                                          |
+| `Permission denied (publickey)`          | The key isn't added to any GitHub account, the `IdentityFile` path is wrong, or the private key's permissions are too open (fix with `chmod 600 ~/.ssh/github_work`).                                                                                  |
+| `Repository not found`                   | The owner part of the URL is wrong, or the account has no access to that repository. GitHub says "not found" for private repositories you can't see. For organization-owned repositories, see [the optional section](#cloning-repos-owned-by-an-organization). |
 
 ## The final workflow
 
@@ -382,3 +364,213 @@ gp portfolio      # clone (or open) a personal repository
 ```
 
 No account switching. No correcting commit emails after the fact. No logging in and out of VS Code. The right identity and the right SSH key are used automatically, everywhere, based entirely on where the repository lives.
+
+That's the whole setup for most people. If your work repositories are owned by a GitHub organization, or you need a third account for a client, the optional section below covers both.
+
+## Optional: organization and client accounts
+
+Everything above is all most setups need. Read this section only if one of these applies to you:
+
+- Your work repositories are owned by a GitHub **organization** rather than your own account.
+- You need a **third account**, such as a client's, on the same machine.
+
+### Authorizing your SSH key for SSO
+
+If your company's GitHub organization enforces SAML single sign-on, adding the key to your account isn't enough. On the **SSH and GPG Keys** page, find the key, click **Configure SSO**, and **Authorize** it for the organization. Until you do, SSH access to that organization's private repositories is refused, even though the same key works fine for your own repositories and HTTPS access may still work. If the button next to the organization says **Deauthorize**, the key is already authorized.
+
+### Cloning repos owned by an organization
+
+There's one gotcha the functions above don't account for: a single hardcoded namespace only works for _one_ place your repos can live. If your work GitHub account is also a member of an organization, org-owned repos live under a completely different path than your own account's repos:
+
+```text
+git@github-work:your-username/repo.git    # repo under your own account
+git@github-work:your-org-name/repo.git    # repo owned by the organization
+```
+
+If `gw` has your username hardcoded and you try to clone a repo that actually belongs to the org, you'll hit a confusing dead end: `ssh -T git@github-work` still authenticates correctly, the org already shows as SSO-authorized under your SSH key in GitHub's settings, and cloning the exact same repo over HTTPS works fine - yet `gw` still fails. It's not a permissions problem at all; the function is just pointed at the wrong namespace.
+
+The fix is to accept the namespace as an optional second argument, defaulting to whichever one you use most often:
+
+```bash
+# filename: ~/.zshrc
+
+gw() {
+    local ROOT="$HOME/Documents/Code/GitHub/Work"
+    local NAMESPACE="${2:-your-username}"   # defaults to your own account, override for orgs
+
+    if [ -z "$1" ]; then
+        echo "Usage: gw <repo-name> [namespace]"
+        return 1
+    fi
+
+    mkdir -p "$ROOT"
+    cd "$ROOT" || return
+
+    if [ -d "$1" ]; then
+        echo "📂 Opening existing repository..."
+        cd "$1"
+    else
+        echo "⬇️  Cloning repository..."
+        git clone git@github-work:"$NAMESPACE"/"$1".git || return
+        cd "$1"
+    fi
+
+    code .
+}
+```
+
+Now both cases work with the same function:
+
+```bash
+gw my-own-repo                  # clones your-username/my-own-repo
+gw internal-tool your-org-name  # clones your-org-name/internal-tool
+```
+
+If you clone org repos more often than your own, just flip the default in `NAMESPACE` - whichever namespace you'll type less often should be the fallback.
+
+### One shared helper, one line per profile
+
+Once you have more than two profiles, copy-pasting the same function for each one gets old, and a fix made in one copy never reaches the others. Move the logic into a single helper, then make every alias a one-liner that passes in its own folder, SSH host, and default namespace:
+
+```bash
+# filename: ~/.zshrc
+
+# ── Shared clone helper ─────────────────────────────────────────────
+# Args: command-name, folder, ssh-host, default-namespace, then "$@"
+_gitclone() {
+    local CMD="$1" FOLDER="$2" HOST="$3" DEFAULT_NS="$4" REPO="$5"
+    local NS="${6:-$DEFAULT_NS}"
+    local ROOT="$HOME/Documents/Code/GitHub/$FOLDER"
+
+    if [ -z "$REPO" ]; then
+        echo "Usage: $CMD <repo-name> [namespace]"
+        return 1
+    fi
+
+    mkdir -p "$ROOT"
+    cd "$ROOT" || return
+
+    if [ -d "$REPO" ]; then
+        echo "📂 Opening existing repository..."
+    else
+        echo "⬇️  Cloning repository..."
+        git clone "git@$HOST:$NS/$REPO.git" || return
+    fi
+
+    cd "$REPO" || return
+    code .
+}
+
+# ── One line per profile ────────────────────────────────────────────
+gw() { _gitclone "gw" "Work"     "github-work"     "your-work-username"     "$@"; }
+gp() { _gitclone "gp" "Personal" "github-personal" "your-personal-username" "$@"; }
+```
+
+The first four arguments are fixed per profile: the command name (only used in the usage message), the folder under `~/Documents/Code/GitHub`, the SSH host alias from Step 2, and the default namespace. The `"$@"` at the end passes through whatever you typed, so the repository name lands in `$5` and the optional namespace in `$6`. This replaces `clone-work`, `clone-personal`, and the standalone `gw` above, so delete those definitions when you paste it in.
+
+Daily usage stays the same, and the namespace override now works for every profile:
+
+```bash
+gw my-own-repo                  # your-work-username/my-own-repo
+gw internal-tool your-org-name  # your-org-name/internal-tool
+gp my-blog                      # your-personal-username/my-blog
+```
+
+### Adding a client or third profile
+
+If you freelance or contract, you may end up with a third GitHub account - a client's - on the same machine. The pattern is exactly the same as before, and each new profile takes five small additions.
+
+<Callout type="info" title="Do you actually need a new profile?">
+  If the client simply invited your existing work or personal account as a
+  collaborator, you don't need a new key at all. Just pass their username or
+  organization as the namespace, for example `gw repo-name client-org`. Only
+  create a separate profile when you have to sign in as a different GitHub
+  account.
+</Callout>
+
+**1. Generate a key and add it to that account.** Use the same naming pattern, and authorize the key for SSO if that account's organization enforces it:
+
+```bash
+ssh-keygen -t ed25519 -C "your-client@email.com" -f ~/.ssh/github_client
+```
+
+**2. Add the host alias** to `~/.ssh/config`, then check it with `ssh -T git@github-client`:
+
+```ssh
+# filename: ~/.ssh/config
+Host github-client
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/github_client
+    IdentitiesOnly yes
+```
+
+**3. Add the identity.** Create the folder, a config file for it, and one more `includeIf` block in your main `~/.gitconfig` (keep the existing ones):
+
+```bash
+mkdir -p ~/Documents/Code/GitHub/Client
+```
+
+```ini
+# filename: ~/.gitconfig-client
+[user]
+    name = Your Name
+    email = your-client@email.com
+```
+
+```ini
+# filename: ~/.gitconfig
+[includeIf "gitdir:~/Documents/Code/GitHub/Client/"]
+    path = ~/.gitconfig-client
+```
+
+**4. Add the alias.** With the shared helper from the previous section, this is a single line:
+
+```bash
+# filename: ~/.zshrc
+
+gcli() { _gitclone "gcli" "Client" "github-client" "your-client-username" "$@"; }
+```
+
+Pick alias names that don't collide with ones you already have. Oh My Zsh's git plugin, for example, already defines `gc` and `gcl`. Run `type <name>` before using a name, and reload with `source ~/.zshrc` afterwards.
+
+**5. Teach the hook about it.** The Step 6 hook hardcodes two folders. Once you have three or more, replace it with a version that loops over a list of `folder:ssh-host` pairs, so a new profile is one more line:
+
+```bash
+# filename: ~/.githooks/pre-push
+#!/bin/bash
+
+REMOTE_URL=$(git remote get-url origin 2>/dev/null)
+REPO_PATH=$(git rev-parse --show-toplevel 2>/dev/null)
+BASE="$HOME/Documents/Code/GitHub"
+
+# One "folder:ssh-host" pair per profile
+PROFILES=(
+    "Work:github-work"
+    "Personal:github-personal"
+    "Client:github-client"
+)
+
+for entry in "${PROFILES[@]}"; do
+    FOLDER="${entry%%:*}"
+    HOST="${entry##*:}"
+
+    if [[ "$REPO_PATH" == "$BASE/$FOLDER/"* && "$REMOTE_URL" != *"$HOST"* ]]; then
+        echo "❌ Error: This repository lives in $FOLDER/ but its remote is not using $HOST."
+        echo "   Remote URL: $REMOTE_URL"
+        echo "   Run: git remote set-url origin git@$HOST:<owner>/<repo>.git"
+        exit 1
+    fi
+done
+
+exit 0
+```
+
+It uses a plain array instead of an associative one on purpose, so it also runs on the older Bash that ships with macOS.
+
+With everything from this section in place, the extra daily commands are:
+
+```bash
+gw internal-tool your-org-name  # clone (or open) a repository owned by an organization
+gcli client-app                 # clone (or open) a client repository
+```
